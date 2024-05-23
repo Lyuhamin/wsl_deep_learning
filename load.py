@@ -16,7 +16,7 @@ train_generator = datagen.flow_from_directory(
     dataset_dir,
     target_size=(150, 150),  # 모든 이미지를 150x150 크기로 조정
     batch_size=32,
-    class_mode="categorical",  # 다중 클래스 분류
+    class_mode="binary",  # 단일 클래스 분류
     subset="training",  # 학습 데이터로 사용
 )
 
