@@ -1,27 +1,126 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <title>상비약 분류기</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pill Classification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid #ccc;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        input[type="file"], #cameraButton {
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+
+        video, canvas {
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>상비약 분류기</h1>
-
-    <form method="POST" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <button type="submit">업로드</button>
+    <h1>Pill Classification</h1>
+    <form id="uploadForm">
+        <input type="file" id="imageInput" name="image" accept="image/*" required />
+        <button type="submit">Upload and Predict</button>
     </form>
+    <button id="cameraButton">Take Photo</button>
+    <video id="camera" autoplay></video>
+    <canvas id="canvas"></canvas>
+    <div id="result"></div>
 
-    {% if prediction %}
-    <h2>예측 결과</h2>
-    <p>클래스: {{ prediction }}</p>
-    <p>신뢰도: {{ confidence }}</p>
-    
-    <img src="{{ url_for('static', filename='uploads/' + image_path.split('/')[-1]) }}" alt="Uploaded Image">
-    {% endif %}
+    <script>
+        const uploadForm = document.getElementById('uploadForm');
+        const imageInput = document.getElementById('imageInput');
+        const cameraButton = document.getElementById('cameraButton');
+        const video = document.getElementById('camera');
+        const canvas = document.getElementById('canvas');
+        const resultDiv = document.getElementById('result');
+
+        uploadForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('image', imageInput.files[0]);
+
+            const response = await fetch('/predict', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            resultDiv.innerText = `Predicted Class: ${result.predicted_class}`;
+        });
+
+        cameraButton.addEventListener('click', function() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+                    video.srcObject = stream;
+                    video.style.display = 'block';
+                    cameraButton.style.display = 'none';
+
+                    const takePhotoButton = document.createElement('button');
+                    takePhotoButton.innerText = 'Capture Photo';
+                    document.body.appendChild(takePhotoButton);
+
+                    takePhotoButton.addEventListener('click', function() {
+                        const context = canvas.getContext('2d');
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+
+                        canvas.toBlob(function(blob) {
+                            const formData = new FormData();
+                            formData.append('image', blob, 'photo.jpg');
+
+                            fetch('/predict', {
+                                method: 'POST',
+                                body: formData
+                            }).then(response => response.json()).then(result => {
+                                resultDiv.innerText = `Predicted Class: ${result.predicted_class}`;
+                                video.style.display = 'none';
+                                takePhotoButton.style.display = 'none';
+                            });
+                        });
+                    });
+                });
+            }
+        });
+    </script>
 </body>
 
 </html>
