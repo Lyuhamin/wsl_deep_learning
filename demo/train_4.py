@@ -1,8 +1,10 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.applications import InceptionV3
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
+from tensorflow.keras.optimizers import Adam
 import pandas as pd
 
 # 데이터셋 경로 설정
@@ -10,7 +12,7 @@ dataset_dir = "/home/lyuha/training_05_21/train"
 
 # 데이터 증강을 포함한 ImageDataGenerator 설정
 datagen = ImageDataGenerator(
-    rescale=1.0 / 255,
+    rescale=1.0 / 255,  # 이미지를 0-1 범위로 스케일링
     rotation_range=40,
     width_shift_range=0.2,
     height_shift_range=0.2,
@@ -24,7 +26,7 @@ datagen = ImageDataGenerator(
 # 학습 데이터 생성기
 train_generator = datagen.flow_from_directory(
     dataset_dir,
-    target_size=(150, 150),
+    target_size=(299, 299),  # InceptionV3의 입력 크기
     batch_size=32,
     class_mode="categorical",  # 다중 클래스 분류
     subset="training",  # 학습 데이터로 사용
@@ -33,36 +35,37 @@ train_generator = datagen.flow_from_directory(
 # 검증 데이터 생성기
 validation_generator = datagen.flow_from_directory(
     dataset_dir,
-    target_size=(150, 150),
+    target_size=(299, 299),
     batch_size=32,
     class_mode="categorical",  # 다중 클래스 분류
     subset="validation",  # 검증 데이터로 사용
 )
 
-# 모델 생성
+# InceptionV3 모델 불러오기 (사전 학습된 가중치 사용)
+base_model = InceptionV3(
+    weights="imagenet", include_top=False, input_shape=(299, 299, 3)
+)
+
+# 모델 구성
 model = Sequential(
     [
-        Conv2D(32, (3, 3), activation="relu", input_shape=(150, 150, 3)),
-        MaxPooling2D(2, 2),
-        Conv2D(64, (3, 3), activation="relu"),
-        MaxPooling2D(2, 2),
-        Conv2D(128, (3, 3), activation="relu"),
-        MaxPooling2D(2, 2),
-        Flatten(),
+        base_model,
+        GlobalAveragePooling2D(),
         Dense(512, activation="relu"),
-        Dropout(0.5),
         Dense(10, activation="softmax"),  # 10개의 클래스
     ]
 )
 
 # 모델 컴파일
-model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
+model.compile(
+    optimizer=Adam(learning_rate=0.0001),
+    loss="categorical_crossentropy",
+    metrics=["accuracy"],
+)
 
 # 모델 학습
 history = model.fit(
-    train_generator,
-    epochs=30,  # 에포크 수를 증가시킴
-    validation_data=validation_generator,
+    train_generator, epochs=30, validation_data=validation_generator  # 에포크 수
 )
 
 # 학습 결과 시각화
@@ -71,7 +74,7 @@ val_acc = history.history["val_accuracy"]
 loss = history.history["loss"]
 val_loss = history.history["val_loss"]
 
-epochs_range = range(30)
+epochs_range = range(10)
 
 # 정확도와 손실 값을 퍼센티지로 변환하여 출력
 df = pd.DataFrame(

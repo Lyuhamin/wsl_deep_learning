@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <title>상비약 분류기</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+    <h1>상비약 분류기</h1>
+
+    <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <button type="submit">업로드</button>
+    </form>
+
+    {% if prediction %}
+    <h2>예측 결과</h2>
+    <p>클래스: {{ prediction }}</p>
+    <p>신뢰도: {{ confidence }}</p>
+    
+    <img src="{{ url_for('static', filename='uploads/' + image_path.split('/')[-1]) }}" alt="Uploaded Image">
+    {% endif %}
+</body>
+
+</html>
