@@ -4,7 +4,6 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.applications import VGG16
 from tensorflow.keras.layers import Dense, Flatten
 from tensorflow.keras.models import Model
-from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 
 # 데이터 경로
@@ -13,7 +12,7 @@ data_dir = "/home/lyuha/training_05_21/train"
 # 하이퍼파라미터 설정
 img_width, img_height = 224, 224
 batch_size = 32
-epochs = 10
+epochs = 30
 
 # 데이터 제너레이터 생성
 datagen = ImageDataGenerator(rescale=1.0 / 255, validation_split=0.2)
@@ -64,29 +63,6 @@ history = model.fit(
     epochs=epochs,
 )
 
-# 테스트 데이터 제너레이터 생성
-test_datagen = ImageDataGenerator(rescale=1.0 / 255)
-test_generator = test_datagen.flow_from_directory(
-    data_dir,
-    target_size=(img_width, img_height),
-    batch_size=batch_size,
-    class_mode="categorical",
-)
-
-# 모델 평가
-loss, accuracy = model.evaluate(test_generator)
-print(f"Test Accuracy: {accuracy * 100:.2f}%")
-
-
-# 학습 과정 시각화
-history = model.fit(
-    train_generator,
-    steps_per_epoch=train_generator.samples // batch_size,
-    validation_data=val_generator,
-    validation_steps=val_generator.samples // batch_size,
-    epochs=epochs,
-)
-
 # 학습 및 검증 정확도와 손실 그래프 그리기
 acc = history.history["accuracy"]
 val_acc = history.history["val_accuracy"]
@@ -109,7 +85,7 @@ plt.legend(loc="upper right")
 plt.title("Training and Validation Loss")
 plt.show()
 
-# 테스트 데이터 제너레이터 생성 및 모델 평가
+# 테스트 데이터 제너레이터 생성
 test_datagen = ImageDataGenerator(rescale=1.0 / 255)
 test_generator = test_datagen.flow_from_directory(
     data_dir,
@@ -118,5 +94,6 @@ test_generator = test_datagen.flow_from_directory(
     class_mode="categorical",
 )
 
+# 모델 평가
 loss, accuracy = model.evaluate(test_generator)
 print(f"Test Accuracy: {accuracy * 100:.2f}%")

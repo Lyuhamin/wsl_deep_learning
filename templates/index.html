@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -49,24 +48,31 @@
         video, canvas {
             display: none;
         }
+
+        #camera {
+            display: block;
+            width: 320px;
+            height: 240px;
+        }
     </style>
 </head>
-
 <body>
     <h1>Pill Classification</h1>
     <form id="uploadForm">
-        <input type="file" id="imageInput" name="image" accept="image/*" required />
+        <input type="file" id="imageInput" name="image" accept="image/*" />
         <button type="submit">Upload and Predict</button>
     </form>
     <button id="cameraButton">Take Photo</button>
     <video id="camera" autoplay></video>
     <canvas id="canvas"></canvas>
+    <button id="captureButton" style="display:none;">Capture Photo</button>
     <div id="result"></div>
 
     <script>
         const uploadForm = document.getElementById('uploadForm');
         const imageInput = document.getElementById('imageInput');
         const cameraButton = document.getElementById('cameraButton');
+        const captureButton = document.getElementById('captureButton');
         const video = document.getElementById('camera');
         const canvas = document.getElementById('canvas');
         const resultDiv = document.getElementById('result');
@@ -75,7 +81,12 @@
             event.preventDefault();
             
             const formData = new FormData();
-            formData.append('image', imageInput.files[0]);
+            if (imageInput.files[0]) {
+                formData.append('image', imageInput.files[0]);
+            } else {
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg'));
+                formData.append('image', blob, 'photo.jpg');
+            }
 
             const response = await fetch('/predict', {
                 method: 'POST',
@@ -92,35 +103,21 @@
                     video.srcObject = stream;
                     video.style.display = 'block';
                     cameraButton.style.display = 'none';
-
-                    const takePhotoButton = document.createElement('button');
-                    takePhotoButton.innerText = 'Capture Photo';
-                    document.body.appendChild(takePhotoButton);
-
-                    takePhotoButton.addEventListener('click', function() {
-                        const context = canvas.getContext('2d');
-                        canvas.width = video.videoWidth;
-                        canvas.height = video.videoHeight;
-                        context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-
-                        canvas.toBlob(function(blob) {
-                            const formData = new FormData();
-                            formData.append('image', blob, 'photo.jpg');
-
-                            fetch('/predict', {
-                                method: 'POST',
-                                body: formData
-                            }).then(response => response.json()).then(result => {
-                                resultDiv.innerText = `Predicted Class: ${result.predicted_class}`;
-                                video.style.display = 'none';
-                                takePhotoButton.style.display = 'none';
-                            });
-                        });
-                    });
+                    captureButton.style.display = 'block';
                 });
             }
         });
+
+        captureButton.addEventListener('click', function() {
+            const context = canvas.getContext('2d');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+
+            canvas.style.display = 'block';
+            video.style.display = 'none';
+            captureButton.style.display = 'none';
+        });
     </script>
 </body>
-
 </html>
