@@ -1,11 +1,13 @@
 import os
 import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from sklearn.model_selection import train_test_split
 from tensorflow.keras.applications import InceptionV3
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, GlobalAveragePooling2D
 import matplotlib.pyplot as plt
+
+# Qt 플랫폼 플러그인 문제 해결을 위한 백엔드 설정
+plt.switch_backend("Agg")
 
 # 데이터셋 경로
 dataset_path = "/home/lyuha/training_05_21/train"
@@ -29,14 +31,14 @@ validation_datagen = datagen.flow_from_directory(
     subset="validation",
 )
 
-# 테스트 데이터 생성
-test_datagen = ImageDataGenerator(rescale=1.0 / 255)
+# 테스트 데이터 생성 - 문제 해결
+test_datagen = ImageDataGenerator(rescale=1.0 / 255, validation_split=0.1)
 test_data = test_datagen.flow_from_directory(
     dataset_path,
     target_size=(224, 224),
     batch_size=32,
     class_mode="categorical",
-    subset="validation",  # 테스트 데이터도 validation으로 나누어 사용
+    subset="validation",
 )
 
 # GoogLeNet 모델 불러오기
@@ -55,7 +57,11 @@ model = Model(inputs=base_model.input, outputs=predictions)
 model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
 
 # 모델 학습
-history = model.fit(train_datagen, epochs=25, validation_data=validation_datagen)
+history = model.fit(
+    train_datagen,
+    epochs=20,  # 여기에서 epochs를 조절합니다.
+    validation_data=validation_datagen,
+)
 
 # 정확도 그래프
 plt.plot(history.history["accuracy"], label="train accuracy")
@@ -64,7 +70,7 @@ plt.title("Model accuracy")
 plt.xlabel("Epoch")
 plt.ylabel("Accuracy")
 plt.legend(loc="upper left")
-plt.show()
+plt.savefig("accuracy.png")  # 그래프를 파일로 저장
 
 # 손실 그래프
 plt.plot(history.history["loss"], label="train loss")
@@ -73,7 +79,7 @@ plt.title("Model loss")
 plt.xlabel("Epoch")
 plt.ylabel("Loss")
 plt.legend(loc="upper left")
-plt.show()
+plt.savefig("loss.png")  # 그래프를 파일로 저장
 
 # 테스트 데이터 평가
 test_loss, test_accuracy = model.evaluate(test_data)

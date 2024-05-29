@@ -12,7 +12,7 @@ data_dir = "/home/lyuha/training_05_21/train"
 # 하이퍼파라미터 설정
 img_width, img_height = 224, 224
 batch_size = 32
-epochs = 30
+epochs = 25
 
 # 데이터 제너레이터 생성
 datagen = ImageDataGenerator(rescale=1.0 / 255, validation_split=0.2)
