@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 plt.switch_backend("Agg")
 
 # 데이터셋 경로
-dataset_path = "/home/lyuha/training_05_21/train"
+dataset_path = "/home/lyu0118/train_medi"
 
 # 데이터 증강 및 전처리
 datagen = ImageDataGenerator(rescale=1.0 / 255, validation_split=0.2)

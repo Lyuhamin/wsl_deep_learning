@@ -6,7 +6,7 @@ from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropou
 import pandas as pd
 
 # 데이터셋 경로 설정
-dataset_dir = "/home/lyuha/training_05_21/train"
+dataset_dir = "/home/lyu0118/train_medi"
 
 # 데이터 증강을 포함한 ImageDataGenerator 설정
 datagen = ImageDataGenerator(
@@ -61,7 +61,7 @@ model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accur
 # 모델 학습
 history = model.fit(
     train_generator,
-    epochs=30,  # 에포크 수를 증가시킴
+    epochs=20,  # 에포크 수를 증가시킴
     validation_data=validation_generator,
 )
 

@@ -1,11 +1,11 @@
 import os
-from flask_app import Flask, request, render_template, redirect, url_for
+from demo3.flask_app import Flask, request, render_template, redirect, url_for
 import cv2
 import numpy as np
 from tensorflow.keras.applications.inception_v3 import preprocess_input
 from tensorflow.keras.layers import TFSMLayer
 from tensorflow.keras.models import Sequential
-from flask_app import app
+from demo3.flask_app import app
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -6,7 +6,7 @@ from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 
 
 # 데이터셋 경로 설정
-dataset_dir = "/home/lyuha/training_05_21/train"
+dataset_dir = "/home/lyu0118/train_medi"
 
 
 # ImageDataGenerator를 사용하여 이미지 데이터를 불러옵니다.
